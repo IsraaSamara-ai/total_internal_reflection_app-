@@ -1179,241 +1179,234 @@ window.addEventListener('load', function(){
 
 
 # ============================================================
-#  CONDITION FIGURES TEMPLATE (جديد - للشكل أ و ب)
+#  CONDITION FIGURES TEMPLATE (مصححة بالكامل)
 # ============================================================
 def get_condition_figure_html():
     return """<!DOCTYPE html>
 <html dir="rtl"><head><meta charset="UTF-8">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#070b14;font-family:'Cairo',Arial,sans-serif}
+html,body{width:100%;height:100%;overflow:hidden;background:#070b14;font-family:Cairo,Arial,sans-serif}
 canvas{display:block;width:100%;height:100%}
-.fig-title{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;color:#e8ecf4;white-space:nowrap}
-.fig-a{position:absolute;top:50%;left:25%;transform:translate(-50%,-50%);font-size:18px;font-weight:900;color:#ff4466}
-.fig-b{position:absolute;top:50%;right:25%;transform:translate(50%,-50%);font-size:18px;font-weight:900;color:#00e5a0}
-.result-a{position:absolute;bottom:52%;left:8%;font-size:11px;font-weight:700;color:#ff4466;white-space:nowrap;text-align:center}
-.result-b{position:absolute;bottom:52%;right:8%;font-size:11px;font-weight:700;color:#00e5a0;white-space:nowrap;text-align:center}
+.ft{position:absolute;top:6px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;color:#e8ecf4;white-space:nowrap}
+.fa{position:absolute;top:13%;left:26%;transform:translate(-50%,0);font-size:17px;font-weight:900;color:#ff4466}
+.fb{position:absolute;top:13%;right:26%;transform:translate(50%,0);font-size:17px;font-weight:900;color:#00e5a0}
+.ra{position:absolute;bottom:10%;left:8%;font-size:10px;font-weight:700;color:#ff4466;white-space:nowrap;text-align:center;line-height:1.6}
+.rb{position:absolute;bottom:10%;right:8%;font-size:10px;font-weight:700;color:#00e5a0;white-space:nowrap;text-align:center;line-height:1.6}
 </style></head><body>
 <canvas id="cv"></canvas>
-<div class="fig-a">\u0627\u0644\u0634\u0643\u0644 (\u0623)</div>
-<div class="fig-b">\u0627\u0644\u0634\u0643\u0644 (\u0628)</div>
-<div class="result-a">\u2717 \u0644\u0627 \u064A\u062D\u0642\u0642 \u0627\u0644\u0634\u0631\u0637<br>n\u2081 < n\u2082</div>
-<div class="result-b">\u2713 \u064A\u062D\u0642\u0642 \u0627\u0644\u0634\u0631\u0637<br>n\u2081 > n\u2082</div>
+<div class="ft">\u0647\u0644 \u064A\u062D\u0642\u0642 \u0627\u0644\u0634\u0643\u0644 \u0634\u0631\u0637 \u062D\u062F\u0648\u062B \u0627\u0644\u0627\u0646\u0639\u0643\u0627\u0633 \u0627\u0644\u0643\u0644\u064A \u0627\u0644\u062F\u0627\u062E\u0644\u064A\u061F</div>
+<div class="fa">\u0627\u0644\u0634\u0643\u0644 (\u0623)</div>
+<div class="fb">\u0627\u0644\u0634\u0643\u0644 (\u0628)</div>
+<div class="ra">\u2717 \u0644\u0627 \u064A\u062D\u0642\u0642 \u0627\u0644\u0634\u0631\u0637<br>\u03B8\u2081 > \u03B8\u2082  \u2192  n\u2081 < n\u2082</div>
+<div class="rb">\u2713 \u064A\u062D\u0642\u0642 \u0627\u0644\u0634\u0631\u0637<br>\u03B8\u2081 < \u03B8\u2082  \u2192  n\u2081 > n\u2082</div>
 <script>
-window.addEventListener('load', function(){
-    var cv = document.getElementById('cv');
-    var ctx = cv.getContext('2d');
+window.addEventListener("load", function(){
+    var cv = document.getElementById("cv");
+    var ctx = cv.getContext("2d");
     var W = window.innerWidth;
     var H = window.innerHeight;
     if(W < 100) W = 800;
-    if(H < 100) H = 350;
+    if(H < 100) H = 360;
     cv.width = W;
     cv.height = H;
 
-    function drawFigure(ox, oy, w, h, theta1Deg, theta2Deg, mode, n1, n2) {
-        var boundary = oy + h * 0.42;
-        var rayLen = Math.min(w, h) * 0.38;
-        if(rayLen < 20) rayLen = 60;
+    var DEG = Math.PI / 180;
 
-        // Medium 1 (top) lighter
-        ctx.fillStyle = 'rgba(40,50,70,0.06)';
-        ctx.fillRect(ox, oy, w, boundary - oy);
-
-        // Medium 2 (bottom) darker
-        var mGrad = ctx.createLinearGradient(0, boundary, 0, oy + h);
-        mGrad.addColorStop(0, 'rgba(30,100,180,0.15)');
-        mGrad.addColorStop(1, 'rgba(20,70,140,0.08)');
-        ctx.fillStyle = mGrad;
-        ctx.fillRect(ox, boundary, w, oy + h - boundary);
-
-        // Boundary line
+    function drawArrow(x1, y1, x2, y2, color, size) {
+        size = size || 9;
+        var a = Math.atan2(y2 - y1, x2 - x1);
         ctx.beginPath();
-        ctx.moveTo(ox, boundary);
-        ctx.lineTo(ox + w, boundary);
-        ctx.strokeStyle = 'rgba(0,229,160,0.25)';
-        ctx.lineWidth = 1;
+        ctx.moveTo(x2 - size*Math.cos(a-0.35), y2 - size*Math.sin(a-0.35));
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x2 - size*Math.cos(a+0.35), y2 - size*Math.sin(a+0.35));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
         ctx.stroke();
-
-        // Normal
-        var ncx = ox + w * 0.5;
-        ctx.beginPath();
-        ctx.setLineDash([4,4]);
-        ctx.moveTo(ncx, oy + 15);
-        ctx.lineTo(ncx, oy + h - 10);
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Normal label
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '9px Cairo';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText('N', ncx + 4, oy + 25);
-
-        // Medium labels
-        ctx.font = '10px Cairo';
-        ctx.textAlign = 'center';
-        if(mode === 'a'){
-            ctx.fillStyle = 'rgba(150,170,200,0.4)';
-            ctx.fillText('\u0647\u0648\u0627\u0621 (n\u2081=' + n1 + ')', ncx, oy + 15);
-            ctx.fillStyle = 'rgba(0,184,255,0.5)';
-            ctx.fillText('\u0632\u062C\u0627\u062C (n\u2082=' + n2 + ')', ncx, oy + h - 5);
-        } else {
-            ctx.fillStyle = 'rgba(0,184,255,0.5)';
-            ctx.fillText('\u0632\u062C\u0627\u062C (n\u2081=' + n1 + ')', ncx, oy + 15);
-            ctx.fillStyle = 'rgba(150,170,200,0.4)';
-            ctx.fillText('\u0647\u0648\u0627\u0621 (n\u2082=' + n2 + ')', ncx, oy + h - 5);
-        }
-
-        // Incident ray (from top to center)
-        var t1 = theta1Deg * Math.PI / 180;
-        var incSX, incSY, incEX, incEY;
-
-        if(mode === 'a') {
-            // Light goes from air (top) to glass (bottom)
-            incSX = ncx - Math.sin(t1) * rayLen;
-            incSY = boundary - Math.cos(t1) * rayLen;
-            incEX = ncx;
-            incEY = boundary;
-        } else {
-            // Light goes from glass (bottom) to air (top)
-            incSX = ncx - Math.sin(t1) * rayLen;
-            incSY = boundary + Math.cos(t1) * rayLen;
-            incEX = ncx;
-            incEY = boundary;
-        }
-
-        // Draw incident ray
-        ctx.beginPath();
-        ctx.moveTo(incSX, incSY);
-        ctx.lineTo(incEX, incEY);
-        ctx.strokeStyle = '#ff2244';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,34,68,0.1)';
-        ctx.lineWidth = 7;
-        ctx.stroke();
-
-        // Incident arrow
-        var arrA = Math.atan2(incEY - incSY, incEX - incSX);
-        ctx.beginPath();
-        ctx.moveTo(incEX, incEY);
-        ctx.lineTo(incEX - 9*Math.cos(arrA-0.35), incEY - 9*Math.sin(arrA-0.35));
-        ctx.lineTo(incEX - 9*Math.cos(arrA+0.35), incEY - 9*Math.sin(arrA+0.35));
-        ctx.closePath();
-        ctx.fillStyle = '#ff2244';
-        ctx.fill();
-
-        // Incident angle arc
-        ctx.beginPath();
-        if(mode === 'a') {
-            ctx.arc(ncx, boundary, 32, -Math.PI/2, -Math.PI/2 + t1, false);
-        } else {
-            ctx.arc(ncx, boundary, 32, Math.PI/2, Math.PI/2 + t1, false);
-        }
-        ctx.strokeStyle = '#ffc857';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.fillStyle = '#ffc857';
-        ctx.font = 'bold 10px Courier New';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        if(mode === 'a') {
-            ctx.fillText('\u03B8\u2081=' + theta1Deg + '\u00B0', ncx + 42, boundary - 22);
-        } else {
-            ctx.fillText('\u03B8\u2081=' + theta1Deg + '\u00B0', ncx + 42, boundary + 24);
-        }
-
-        // Refracted ray
-        var t2 = theta2Deg * Math.PI / 180;
-        var refEX, refEY;
-        var refColor = '#00b8ff';
-
-        if(mode === 'a') {
-            // Refracted into glass (approaching normal)
-            refEX = ncx + Math.sin(t2) * rayLen;
-            refEY = boundary + Math.cos(t2) * rayLen;
-        } else {
-            // Refracted into air (away from normal)
-            refEX = ncx + Math.sin(t2) * rayLen;
-            refEY = boundary - Math.cos(t2) * rayLen;
-        }
-
-        ctx.beginPath();
-        ctx.moveTo(incEX, incEY);
-        ctx.lineTo(refEX, refEY);
-        ctx.strokeStyle = refColor;
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(0,184,255,0.1)';
-        ctx.lineWidth = 7;
-        ctx.stroke();
-
-        // Refracted arrow
-        var rArrA = Math.atan2(refEY - incEY, refEX - incEX);
-        ctx.beginPath();
-        ctx.moveTo(refEX, refEY);
-        ctx.lineTo(refEX - 9*Math.cos(rArrA-0.35), refEY - 9*Math.sin(rArrA-0.35));
-        ctx.lineTo(refEX - 9*Math.cos(rArrA+0.35), refEY - 9*Math.sin(rArrA+0.35));
-        ctx.closePath();
-        ctx.fillStyle = refColor;
-        ctx.fill();
-
-        // Refraction angle arc
-        ctx.beginPath();
-        if(mode === 'a') {
-            ctx.arc(ncx, boundary, 28, Math.PI/2, Math.PI/2 - t2, true);
-        } else {
-            ctx.arc(ncx, boundary, 28, -Math.PI/2, -Math.PI/2 - t2, true);
-        }
-        ctx.strokeStyle = refColor;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.fillStyle = refColor;
-        ctx.font = 'bold 10px Courier New';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        if(mode === 'a') {
-            ctx.fillText('\u03B8\u2082=' + theta2Deg + '\u00B0', ncx - 42, boundary + 22);
-        } else {
-            ctx.fillText('\u03B8\u2082=' + theta2Deg + '\u00B0', ncx - 42, boundary - 22);
-        }
-
-        // Comparison note
-        ctx.font = 'bold 10px Cairo';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        if(mode === 'a') {
-            ctx.fillStyle = '#ff4466';
-            ctx.fillText('\u03B8\u2081=' + theta1Deg + '\u00B0 < \u03B8\u2082=' + theta2Deg + '\u00B0  \u2192  n\u2081 < n\u2082', ncx, oy + h + 16);
-        } else {
-            ctx.fillStyle = '#00e5a0';
-            ctx.fillText('\u03B8\u2081=' + theta1Deg + '\u00B0 > \u03B8\u2082=' + theta2Deg + '\u00B0  \u2192  n\u2081 > n\u2082', ncx, oy + h + 16);
-        }
-
-        // Hit point
-        ctx.beginPath();
-        ctx.arc(ncx, boundary, 3, 0, Math.PI*2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
     }
 
-    // Draw Figure A (left half): air→glass, θ₁=37°, θ₂=55°
+    function drawRay(x1, y1, x2, y2, color) {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.strokeStyle = color.replace(")", ",0.12)").replace("rgb","rgba"); ctx.lineWidth = 7; ctx.stroke();
+        drawArrow(x1, y1, x2, y2, color);
+    }
+
+    function drawFigureA(ox, oy, w, h) {
+        var ncx = ox + w * 0.5;
+        var bnd = oy + h * 0.42;
+        var rL = Math.min(w, h) * 0.36;
+        if(rL < 20) rL = 60;
+
+        var t1 = 55 * DEG;
+        var t2 = 33.2 * DEG;
+        var n1 = 1.003;
+        var n2 = 1.5;
+
+        // Medium 1 (air) on top
+        ctx.fillStyle = "rgba(40,50,70,0.05)";
+        ctx.fillRect(ox, oy, w, bnd - oy);
+
+        // Medium 2 (glass) on bottom
+        var mG = ctx.createLinearGradient(0, bnd, 0, oy + h);
+        mG.addColorStop(0, "rgba(30,100,180,0.15)");
+        mG.addColorStop(1, "rgba(20,70,140,0.08)");
+        ctx.fillStyle = mG;
+        ctx.fillRect(ox, bnd, w, oy + h - bnd);
+
+        // Boundary
+        ctx.beginPath(); ctx.moveTo(ox, bnd); ctx.lineTo(ox + w, bnd);
+        ctx.strokeStyle = "rgba(0,229,160,0.25)"; ctx.lineWidth = 1; ctx.stroke();
+
+        // Normal
+        ctx.beginPath(); ctx.setLineDash([4,4]);
+        ctx.moveTo(ncx, oy + 18); ctx.lineTo(ncx, oy + h - 8);
+        ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 1; ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Labels
+        ctx.font = "10px Cairo"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "rgba(150,170,200,0.5)";
+        ctx.fillText("\u0647\u0648\u0627\u0621 (n\u2081=" + n1 + ")", ncx, oy + 16);
+        ctx.fillStyle = "rgba(0,184,255,0.5)";
+        ctx.fillText("\u0632\u062C\u0627\u062C (n\u2082=" + n2 + ")", ncx, oy + h - 2);
+
+        // Normal label
+        ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "9px Cairo"; ctx.textAlign = "left";
+        ctx.fillText("N", ncx + 4, oy + 30);
+
+        // Incident ray: from top-left DOWN to boundary
+        var incSX = ncx - Math.sin(t1) * rL;
+        var incSY = bnd - Math.cos(t1) * rL;
+        drawRay(incSX, incSY, ncx, bnd, "rgb(255,34,68)");
+
+        // Refracted ray: from boundary DOWN to bottom-right (approaching normal)
+        var refEX = ncx + Math.sin(t2) * rL;
+        var refEY = bnd + Math.cos(t2) * rL;
+        drawRay(ncx, bnd, refEX, refEY, "rgb(0,184,255)");
+
+        // θ₁ arc (from normal UP to incident ray, on the left)
+        ctx.beginPath();
+        ctx.arc(ncx, bnd, 34, -Math.PI/2, -Math.PI/2 - t1, true);
+        ctx.strokeStyle = "#ffc857"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#ffc857"; ctx.font = "bold 10px Courier New";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("\u03B8\u2081=55\u00B0", ncx - 48, bnd - 24);
+
+        // θ₂ arc (from normal DOWN to refracted ray, on the right)
+        ctx.beginPath();
+        ctx.arc(ncx, bnd, 28, Math.PI/2, Math.PI/2 - t2, true);
+        ctx.strokeStyle = "#00b8ff"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#00b8ff"; ctx.font = "bold 10px Courier New";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("\u03B8\u2082=33.2\u00B0", ncx + 44, bnd + 22);
+
+        // Hit point
+        ctx.beginPath(); ctx.arc(ncx, bnd, 3, 0, Math.PI*2);
+        ctx.fillStyle = "#fff"; ctx.fill();
+
+        // Snell verification
+        ctx.font = "9px Courier New"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        ctx.fillText("n\u2081 sin\u03B8\u2081 = n\u2082 sin\u03B8\u2082", ncx, oy + h + 14);
+        ctx.fillText(n1 + "\u00D7" + Math.sin(t1).toFixed(4) + " = " + n2 + "\u00D7" + Math.sin(t2).toFixed(4), ncx, oy + h + 26);
+    }
+
+    function drawFigureB(ox, oy, w, h) {
+        var ncx = ox + w * 0.5;
+        var bnd = oy + h * 0.42;
+        var rL = Math.min(w, h) * 0.36;
+        if(rL < 20) rL = 60;
+
+        var t1 = 37 * DEG;
+        var t2 = 64.2 * DEG;
+        var n1 = 1.5;
+        var n2 = 1.003;
+
+        // Medium 1 (glass) on BOTTOM
+        var mG = ctx.createLinearGradient(0, bnd, 0, oy + h);
+        mG.addColorStop(0, "rgba(30,100,180,0.15)");
+        mG.addColorStop(1, "rgba(20,70,140,0.08)");
+        ctx.fillStyle = mG;
+        ctx.fillRect(ox, bnd, w, oy + h - bnd);
+
+        // Medium 2 (air) on TOP
+        ctx.fillStyle = "rgba(40,50,70,0.05)";
+        ctx.fillRect(ox, oy, w, bnd - oy);
+
+        // Boundary
+        ctx.beginPath(); ctx.moveTo(ox, bnd); ctx.lineTo(ox + w, bnd);
+        ctx.strokeStyle = "rgba(0,229,160,0.25)"; ctx.lineWidth = 1; ctx.stroke();
+
+        // Normal
+        ctx.beginPath(); ctx.setLineDash([4,4]);
+        ctx.moveTo(ncx, oy + 18); ctx.lineTo(ncx, oy + h - 8);
+        ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 1; ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Labels - GLASS on BOTTOM, AIR on TOP
+        ctx.font = "10px Cairo"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "rgba(150,170,200,0.5)";
+        ctx.fillText("\u0647\u0648\u0627\u0621 (n\u2082=" + n2 + ")", ncx, oy + 16);
+        ctx.fillStyle = "rgba(0,184,255,0.5)";
+        ctx.fillText("\u0632\u062C\u0627\u062C (n\u2081=" + n1 + ")", ncx, oy + h - 2);
+
+        // Normal label
+        ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "9px Cairo"; ctx.textAlign = "left";
+        ctx.fillText("N", ncx + 4, oy + 30);
+
+        // Incident ray: from bottom-left UP to boundary
+        var incSX = ncx - Math.sin(t1) * rL;
+        var incSY = bnd + Math.cos(t1) * rL;
+        drawRay(incSX, incSY, ncx, bnd, "rgb(255,34,68)");
+
+        // Refracted ray: from boundary UP to top-right (away from normal)
+        var refEX = ncx + Math.sin(t2) * rL;
+        var refEY = bnd - Math.cos(t2) * rL;
+        drawRay(ncx, bnd, refEX, refEY, "rgb(0,184,255)");
+
+        // θ₁ arc (from normal DOWN to incident ray, on the left side below boundary)
+        ctx.beginPath();
+        ctx.arc(ncx, bnd, 34, Math.PI/2, Math.PI/2 + t1, false);
+        ctx.strokeStyle = "#ffc857"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#ffc857"; ctx.font = "bold 10px Courier New";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("\u03B8\u2081=37\u00B0", ncx - 44, bnd + 26);
+
+        // θ₂ arc (from normal UP to refracted ray, on the right side above boundary)
+        ctx.beginPath();
+        ctx.arc(ncx, bnd, 28, -Math.PI/2, -Math.PI/2 - t2, true);
+        ctx.strokeStyle = "#00b8ff"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#00b8ff"; ctx.font = "bold 10px Courier New";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("\u03B8\u2082=64.2\u00B0", ncx + 52, bnd - 24);
+
+        // Hit point
+        ctx.beginPath(); ctx.arc(ncx, bnd, 3, 0, Math.PI*2);
+        ctx.fillStyle = "#fff"; ctx.fill();
+
+        // Snell verification
+        ctx.font = "9px Courier New"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        ctx.fillText("n\u2081 sin\u03B8\u2081 = n\u2082 sin\u03B8\u2082", ncx, oy + h + 14);
+        ctx.fillText(n1 + "\u00D7" + Math.sin(t1).toFixed(4) + " = " + n2 + "\u00D7" + Math.sin(t2).toFixed(4), ncx, oy + h + 26);
+    }
+
+    // Layout
     var margin = 20;
     var halfW = (W - margin * 3) / 2;
-    var figH = H * 0.7;
-    var figY = H * 0.12;
+    var figH = H * 0.62;
+    var figY = H * 0.16;
 
-    drawFigure(margin, figY, halfW, figH, 37, 55, 'a', 1.4, 1.8);
-    drawFigure(margin * 2 + halfW, figY, halfW, figH, 55, 37, 'b', 1.8, 1.4);
+    drawFigureA(margin, figY, halfW, figH);
+    drawFigureB(margin * 2 + halfW, figY, halfW, figH);
 
     // Divider
     ctx.beginPath();
     ctx.moveTo(W/2, figY);
-    ctx.lineTo(W/2, figY + figH + 20);
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineTo(W/2, figY + figH + 30);
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
     ctx.lineWidth = 1;
     ctx.stroke();
 });
@@ -2074,8 +2067,8 @@ def main():
         """, unsafe_allow_html=True)
 
         tir_questions = [
-            {"desc": "الشكل (أ): θ₁ = 37° , θ₂ = 55°", "theta1": 37, "theta2": 55, "n1": 1.8, "n2": 1.4},
-            {"desc": "الشكل (ب): θ₁ = 55° , θ₂ = 37°", "theta1": 55, "theta2": 37, "n1": 1.8, "n2": 1.4},
+            {"desc": "الشكل (أ): θ₁ = 55° , θ₂ = 33.2°", "theta1": 55, "theta2": 33.2, "n1": 1.003, "n2": 1.5},
+            {"desc": "الشكل (ب): θ₁ = 37° , θ₂ = 64.2°", "theta1": 37, "theta2": 64.2, "n1": 1.5, "n2": 1.003},
         ]
 
         for q in tir_questions:
