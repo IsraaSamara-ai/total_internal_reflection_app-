@@ -1420,57 +1420,76 @@ window.addEventListener('load', function(){
 </script></body></html>"""
 
 # ============================================================
-#  RAY PATH TEMPLATE (المصححة)
+#  RAY PATH TEMPLATE (إعادة كتابة كاملة مع json.dumps)
 # ============================================================
 def get_ray_path_html(case_num, angle, medium1, n1, n2):
-    theta_c = calc_critical_angle(n1, n2)
-    theta_c_str = f"{theta_c:.1f}" if theta_c else "N/A"
+    import json
 
-    if theta_c and angle < theta_c - 0.5:
+    theta_c = calc_critical_angle(n1, n2)
+
+    if theta_c is None:
         mode = "refraction"
-        theta2 = calc_refraction_angle(n1, angle, n2)
-        theta2_str = f"{theta2:.1f}" if theta2 else "N/A"
-    elif theta_c and abs(angle - theta_c) <= 0.5:
+        theta_c_val = -1
+        theta2_val = -1
+    elif angle < theta_c - 0.5:
+        mode = "refraction"
+        theta_c_val = round(theta_c, 1)
+        t2 = calc_refraction_angle(n1, angle, n2)
+        theta2_val = round(t2, 1) if t2 else -1
+    elif abs(angle - theta_c) <= 0.5:
         mode = "critical"
-        theta2_str = "90.0"
+        theta_c_val = round(theta_c, 1)
+        theta2_val = 90.0
     else:
         mode = "reflection"
-        theta2_str = "N/A"
+        theta_c_val = round(theta_c, 1)
+        theta2_val = -1
 
     if mode == "refraction":
-        badge_class = "badge-ref"
         badge_css = "background:rgba(0,184,255,0.15);border:1px solid rgba(0,184,255,0.4);color:#00b8ff"
-        mode_text = "\u0627\u0646\u0643\u0633\u0627\u0631 \u0645\u0628\u062A\u0639\u062F \u0639\u0646 \u0627\u0644\u0639\u0645\u0648\u062F"
+        badge_text = "\u0627\u0646\u0643\u0633\u0627\u0631 \u0645\u0628\u062A\u0639\u062F \u0639\u0646 \u0627\u0644\u0639\u0645\u0648\u062F"
     elif mode == "critical":
-        badge_class = "badge-crit"
         badge_css = "background:rgba(255,200,87,0.15);border:1px solid rgba(255,200,87,0.4);color:#ffc857"
-        mode_text = "\u0627\u0644\u0632\u0627\u0648\u064A\u0629 \u0627\u0644\u062D\u0631\u062C\u0629 (\u03B8\u2082 = 90\u00B0)"
+        badge_text = "\u0627\u0644\u0632\u0627\u0648\u064A\u0629 \u0627\u0644\u062D\u0631\u062C\u0629 (\u03B8\u2082 = 90\u00B0)"
     else:
-        badge_class = "badge-tir"
         badge_css = "background:rgba(255,34,68,0.15);border:1px solid rgba(255,34,68,0.4);color:#ff2244"
-        mode_text = "\u0627\u0646\u0639\u0643\u0627\u0633 \u0643\u0644\u064A \u062F\u0627\u062E\u0644\u064A"
+        badge_text = "\u0627\u0646\u0639\u0643\u0627\u0633 \u0643\u0644\u064A \u062F\u0627\u062E\u0644\u064A"
 
-    return """<!DOCTYPE html>
+    theta_c_disp = str(theta_c_val) if theta_c_val >= 0 else "N/A"
+    theta2_disp = str(theta2_val) if theta2_val >= 0 else "N/A"
+
+    data_json = json.dumps({
+        "angle": angle,
+        "n1": n1,
+        "n2": n2,
+        "mode": mode,
+        "theta_c": theta_c_val,
+        "theta2": theta2_val,
+        "medium": medium1,
+        "tc_disp": theta_c_disp,
+        "t2_disp": theta2_disp,
+        "badge_css": badge_css,
+        "badge_text": badge_text
+    }, ensure_ascii=False)
+
+    html = """<!DOCTYPE html>
 <html dir="rtl"><head><meta charset="UTF-8">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#070b14;font-family:'Cairo',Arial,sans-serif}
+html,body{width:100%;height:100%;overflow:hidden;background:#070b14;font-family:Cairo,Arial,sans-serif}
 canvas{display:block;width:100%;height:100%}
-.case-label{position:absolute;top:8px;right:12px;background:rgba(13,21,37,0.9);border:1px solid #1a2744;border-radius:8px;padding:6px 14px;color:#a0b0c8;font-size:12px;direction:rtl}
-.case-label .v{color:#00e5a0;font-weight:700;direction:ltr;display:inline-block}
-.mode-badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:6px 18px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;""" + badge_css + """}
+.clbl{position:absolute;top:8px;right:12px;background:rgba(13,21,37,0.9);border:1px solid #1a2744;border-radius:8px;padding:6px 14px;color:#a0b0c8;font-size:12px;direction:rtl}
+.clbl .v{color:#00e5a0;font-weight:700;direction:ltr;display:inline-block}
+.badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:6px 18px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap}
 </style></head><body>
 <canvas id="cv"></canvas>
-<div class="case-label">
-\u0632\u0627\u0648\u064A\u0629 \u0627\u0644\u0633\u0642\u0648\u0637: <span class="v">""" + str(angle) + """\u00B0</span> |
-\u03B8c = <span class="v">""" + theta_c_str + """\u00B0</span> |
-n\u2081 = <span class="v">""" + str(n1) + """</span> | n\u2082 = <span class="v">""" + str(n2) + """</span>
-</div>
-<div class="mode-badge">""" + mode_text + """</div>
+<div class="clbl" id="clbl"></div>
+<div class="badge" id="badge"></div>
 <script>
-window.addEventListener('load', function(){
-    var cv = document.getElementById('cv');
-    var ctx = cv.getContext('2d');
+window.addEventListener("load", function(){
+    var D = """ + data_json + """;
+    var cv = document.getElementById("cv");
+    var ctx = cv.getContext("2d");
     var W = window.innerWidth;
     var H = window.innerHeight;
     if(W < 100) W = 600;
@@ -1478,12 +1497,14 @@ window.addEventListener('load', function(){
     cv.width = W;
     cv.height = H;
 
-    var ANGLE = """ + str(angle) + """;
-    var N1 = """ + str(n1) + """;
-    var N2 = """ + str(n2) + """;
-    var MODE = '""" + mode + """';
-    var THETA2 = """ + theta2_str + """;
-    var MEDIUM1 = '""" + medium1 + """';
+    document.getElementById("clbl").innerHTML =
+        "\u0632\u0627\u0648\u064A\u0629 \u0627\u0644\u0633\u0642\u0648\u0637: <span class=\\"v\\">" + D.angle + "\u00B0</span> | " +
+        "\u03B8c = <span class=\\"v\\">" + D.tc_disp + "\u00B0</span> | " +
+        "n\u2081 = <span class=\\"v\\">" + D.n1 + "</span> | n\u2082 = <span class=\\"v\\">" + D.n2 + "</span>";
+
+    var badge = document.getElementById("badge");
+    badge.textContent = D.badge_text;
+    badge.style.cssText = D.badge_css;
 
     var cx = W * 0.5;
     var boundary = H * 0.45;
@@ -1491,123 +1512,111 @@ window.addEventListener('load', function(){
     if(rayLen < 30) rayLen = 100;
 
     var m1G = ctx.createLinearGradient(0, boundary, 0, H);
-    m1G.addColorStop(0, 'rgba(30,100,180,0.15)');
-    m1G.addColorStop(1, 'rgba(20,70,140,0.08)');
+    m1G.addColorStop(0, "rgba(30,100,180,0.15)");
+    m1G.addColorStop(1, "rgba(20,70,140,0.08)");
     ctx.fillStyle = m1G;
     ctx.fillRect(0, boundary, W, H - boundary);
-    ctx.strokeStyle = 'rgba(30,100,180,0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, boundary); ctx.lineTo(W, boundary); ctx.stroke();
-
-    ctx.fillStyle = 'rgba(40,50,70,0.05)';
+    ctx.beginPath(); ctx.moveTo(0, boundary); ctx.lineTo(W, boundary);
+    ctx.strokeStyle = "rgba(30,100,180,0.3)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = "rgba(40,50,70,0.05)";
     ctx.fillRect(0, 0, W, boundary);
 
-    ctx.fillStyle = 'rgba(0,184,255,0.5)';
-    ctx.font = 'bold 12px Cairo';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(MEDIUM1 + ' (n\\u2081=' + N1 + ')', 12, boundary + 22);
-    ctx.fillStyle = 'rgba(150,170,200,0.4)';
-    ctx.fillText('\\u0647\\u0648\\u0627\\u0621 (n\\u2082=' + N2 + ')', 12, boundary - 10);
+    ctx.font = "bold 12px Cairo";
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "rgba(0,184,255,0.5)";
+    ctx.fillText(D.medium + " (n\u2081=" + D.n1 + ")", 12, boundary + 22);
+    ctx.fillStyle = "rgba(150,170,200,0.4)";
+    ctx.fillText("\u0647\u0648\u0627\u0621 (n\u2082=" + D.n2 + ")", 12, boundary - 10);
 
-    ctx.beginPath();
-    ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.setLineDash([5,5]);
     ctx.moveTo(cx, boundary - rayLen - 20);
     ctx.lineTo(cx, boundary + rayLen + 20);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 1; ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.font = '10px Cairo';
-    ctx.textAlign = 'left';
-    ctx.fillText('N', cx + 5, boundary - rayLen - 8);
+    ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "10px Cairo";
+    ctx.textAlign = "left";
+    ctx.fillText("N", cx + 5, boundary - rayLen - 8);
 
-    var aRad = ANGLE * Math.PI / 180;
+    var aRad = D.angle * Math.PI / 180;
     var incSX = cx - Math.sin(aRad) * rayLen;
     var incSY = boundary + Math.cos(aRad) * rayLen;
 
-    ctx.beginPath();
-    ctx.moveTo(incSX, incSY);
-    ctx.lineTo(cx, boundary);
-    ctx.strokeStyle = '#ff2244';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,34,68,0.1)';
-    ctx.lineWidth = 8;
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(incSX, incSY); ctx.lineTo(cx, boundary);
+    ctx.strokeStyle = "#ff2244"; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(incSX, incSY); ctx.lineTo(cx, boundary);
+    ctx.strokeStyle = "rgba(255,34,68,0.1)"; ctx.lineWidth = 8; ctx.stroke();
 
     var arrA = Math.atan2(boundary - incSY, cx - incSX);
     ctx.beginPath();
     ctx.moveTo(cx, boundary);
     ctx.lineTo(cx - 10*Math.cos(arrA-0.35), boundary - 10*Math.sin(arrA-0.35));
     ctx.lineTo(cx - 10*Math.cos(arrA+0.35), boundary - 10*Math.sin(arrA+0.35));
-    ctx.closePath();
-    ctx.fillStyle = '#ff2244';
-    ctx.fill();
+    ctx.closePath(); ctx.fillStyle = "#ff2244"; ctx.fill();
 
     ctx.beginPath();
     ctx.arc(cx, boundary, 40, Math.PI/2, Math.PI/2 + aRad, true);
-    ctx.strokeStyle = '#ffc857';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.fillStyle = '#ffc857';
-    ctx.font = 'bold 11px Courier New';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('\\u03B8\\u2081=' + ANGLE + '\\u00B0', cx - 58, boundary + 32);
+    ctx.strokeStyle = "#ffc857"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = "#ffc857"; ctx.font = "bold 11px Courier New";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("\u03B8\u2081=" + D.angle + "\u00B0", cx - 58, boundary + 32);
 
-    if(MODE === 'refraction') {
-        var t2 = parseFloat(THETA2) * Math.PI / 180;
+    if(D.mode === "refraction") {
+        var t2 = D.theta2 * Math.PI / 180;
         var refEX = cx + Math.sin(t2) * rayLen;
         var refEY = boundary - Math.cos(t2) * rayLen;
         ctx.beginPath(); ctx.moveTo(cx, boundary); ctx.lineTo(refEX, refEY);
-        ctx.strokeStyle = '#00b8ff'; ctx.lineWidth = 2.5; ctx.stroke();
-        ctx.strokeStyle = 'rgba(0,184,255,0.1)'; ctx.lineWidth = 8; ctx.stroke();
+        ctx.strokeStyle = "#00b8ff"; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, boundary); ctx.lineTo(refEX, refEY);
+        ctx.strokeStyle = "rgba(0,184,255,0.1)"; ctx.lineWidth = 8; ctx.stroke();
         var rA = Math.atan2(refEY - boundary, refEX - cx);
         ctx.beginPath();
         ctx.moveTo(refEX, refEY);
         ctx.lineTo(refEX - 10*Math.cos(rA-0.35), refEY - 10*Math.sin(rA-0.35));
         ctx.lineTo(refEX - 10*Math.cos(rA+0.35), refEY - 10*Math.sin(rA+0.35));
-        ctx.closePath(); ctx.fillStyle = '#00b8ff'; ctx.fill();
+        ctx.closePath(); ctx.fillStyle = "#00b8ff"; ctx.fill();
         ctx.beginPath();
         ctx.arc(cx, boundary, 35, -Math.PI/2, -Math.PI/2 + t2, false);
-        ctx.strokeStyle = '#00b8ff'; ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.fillStyle = '#00b8ff'; ctx.font = 'bold 11px Courier New';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('\\u03B8\\u2082=' + THETA2 + '\\u00B0', cx + 58, boundary - 28);
-    } else if(MODE === 'critical') {
+        ctx.strokeStyle = "#00b8ff"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#00b8ff"; ctx.font = "bold 11px Courier New";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("\u03B8\u2082=" + D.theta2 + "\u00B0", cx + 58, boundary - 28);
+
+    } else if(D.mode === "critical") {
         var crEX = cx + rayLen;
         ctx.beginPath(); ctx.moveTo(cx, boundary); ctx.lineTo(crEX, boundary);
-        ctx.strokeStyle = '#ffc857'; ctx.lineWidth = 2.5; ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,200,87,0.1)'; ctx.lineWidth = 8; ctx.stroke();
-        ctx.fillStyle = '#ffc857'; ctx.font = 'bold 11px Courier New';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('\\u03B8\\u2082 = 90\\u00B0', cx + rayLen/2, boundary - 12);
+        ctx.strokeStyle = "#ffc857"; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, boundary); ctx.lineTo(crEX, boundary);
+        ctx.strokeStyle = "rgba(255,200,87,0.1)"; ctx.lineWidth = 8; ctx.stroke();
+        ctx.fillStyle = "#ffc857"; ctx.font = "bold 11px Courier New";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("\u03B8\u2082 = 90\u00B0", cx + rayLen/2, boundary - 12);
+
     } else {
         var rlEX = cx + Math.sin(aRad) * rayLen;
         var rlEY = boundary + Math.cos(aRad) * rayLen;
         ctx.beginPath(); ctx.moveTo(cx, boundary); ctx.lineTo(rlEX, rlEY);
-        ctx.strokeStyle = '#ff2244'; ctx.lineWidth = 2.5; ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,34,68,0.1)'; ctx.lineWidth = 8; ctx.stroke();
+        ctx.strokeStyle = "#ff2244"; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, boundary); ctx.lineTo(rlEX, rlEY);
+        ctx.strokeStyle = "rgba(255,34,68,0.1)"; ctx.lineWidth = 8; ctx.stroke();
         var rA2 = Math.atan2(rlEY - boundary, rlEX - cx);
         ctx.beginPath();
         ctx.moveTo(rlEX, rlEY);
         ctx.lineTo(rlEX - 10*Math.cos(rA2-0.35), rlEY - 10*Math.sin(rA2-0.35));
         ctx.lineTo(rlEX - 10*Math.cos(rA2+0.35), rlEY - 10*Math.sin(rA2+0.35));
-        ctx.closePath(); ctx.fillStyle = '#ff2244'; ctx.fill();
+        ctx.closePath(); ctx.fillStyle = "#ff2244"; ctx.fill();
         ctx.beginPath();
         ctx.arc(cx, boundary, 35, Math.PI/2 - aRad, Math.PI/2, false);
-        ctx.strokeStyle = '#ff6688'; ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.fillStyle = '#ff6688'; ctx.font = 'bold 11px Courier New';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText("\\u03B8'=" + ANGLE + '\\u00B0', cx + 58, boundary + 32);
+        ctx.strokeStyle = "#ff6688"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = "#ff6688"; ctx.font = "bold 11px Courier New";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("\u03B8\u2081\u2032=" + D.angle + "\u00B0", cx + 58, boundary + 32);
     }
 
     ctx.beginPath(); ctx.arc(cx, boundary, 4, 0, Math.PI*2);
-    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.fillStyle = "#ffffff"; ctx.fill();
 });
 </script></body></html>"""
+    return html
 
 
 # ============================================================
