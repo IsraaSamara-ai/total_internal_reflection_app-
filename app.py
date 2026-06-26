@@ -2442,5 +2442,111 @@ def main():
 # ============================================================
 #  RUN
 # ============================================================
+        # ========================================================
+        #  DOWNLOAD SECTION
+        # ========================================================
+        st.markdown("---")
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 📥 تنزيل المحاكاة كملف HTML مستقل")
+
+        st.markdown("""
+        <div style='color:#7a8ba8;font-size:0.9rem;margin-bottom:16px'>
+        يمكنك تنزيل كل محاكاة كملف HTML مستقل يعمل على أي متصفح بدون إنترنت (ما عدا Three.js للمحاكاة 3D).
+        افتح الملف المحمّل في أي متصفح وشاركه مع الطلاب.
+        </div>
+        """, unsafe_allow_html=True)
+
+        dl_col1, dl_col2, dl_col3 = st.columns(3)
+
+        # Download function
+        def get_download_btn(html_content, filename, label):
+            b64 = __import__('base64').b64encode(html_content.encode('utf-8')).decode()
+            href = f'<a href="data:text/html;base64,{b64}" download="{filename}" style="display:inline-block;padding:10px 20px;background:linear-gradient(135deg,rgba(0,229,160,0.15),rgba(0,184,255,0.15));border:1px solid rgba(0,229,160,0.3);border-radius:10px;color:#00e5a0;text-decoration:none;font-weight:700;font-size:0.9rem;text-align:center;width:100%">{label}</a>'
+            st.markdown(href, unsafe_allow_html=True)
+
+        with dl_col1:
+            st.markdown("**المحاكاة 3D**")
+            n1_dl = 1.50
+            n2_dl = 1.00
+            angle_dl = 50.0
+            get_download_btn(
+                get_tir_3d_html(angle_dl, n1_dl, n2_dl),
+                "tir_3d_simulation.html",
+                "📥 تنزيل المحاكاة ثلاثية الأبعاد"
+            )
+            st.markdown("<span style='color:#7a8ba8;font-size:0.75rem'>يتطلب اتصال إنترنت لتحميل Three.js</span>", unsafe_allow_html=True)
+
+        with dl_col2:
+            st.markdown("**إكمال مسارات الأشعة**")
+            ray_html_all = ""
+            for i, case in enumerate([
+                {"angle": 30, "medium": "ماء", "n1": 1.33, "n2": 1.0},
+                {"angle": 48.6, "medium": "ماء", "n1": 1.33, "n2": 1.0},
+                {"angle": 50, "medium": "ماء", "n1": 1.33, "n2": 1.0},
+            ]):
+                ray_html_all += f"<h3 style='color:#00e5a0;margin:20px 0 10px;text-align:center'>الحالة {i+1}: θ₁ = {case['angle']}°</h3>"
+                ray_html_all += f"<div style='margin:10px auto;max-width:700px'>{get_ray_path_html(i, case['angle'], case['medium'], case['n1'], case['n2'])}</div><hr style='border-color:rgba(255,255,255,0.1)'>"
+
+            combined_ray = """<!DOCTYPE html>
+<html dir="rtl"><head><meta charset="UTF-8">
+<title>إكمال مسارات الأشعة</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070b14;color:#e8ecf4;font-family:Cairo,Arial,sans-serif;padding:20px}
+h2{color:#00e5a0;text-align:center;margin:20px 0;font-size:1.5rem}
+iframe{border:1px solid #1a2744;border-radius:12px;display:block;margin:0 auto}
+</style></head><body>
+<h2>إكمال مسارات الأشعة — الزاوية الحرجة للماء = 48.6°</h2>
+""" + ray_html_all + """
+</body></html>"""
+            get_download_btn(combined_ray, "ray_paths.html", "📥 تنزيل مسارات الأشعة")
+
+        with dl_col3:
+            st.markdown("**الظواهر الضوئية**")
+            phenomena_html = """<!DOCTYPE html>
+<html dir="rtl"><head><meta charset="UTF-8">
+<title>ظواهر ضوئية</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070b14;color:#e8ecf4;font-family:Cairo,Arial,sans-serif;padding:20px}
+h2{color:#00e5a0;text-align:center;margin:20px 0;font-size:1.5rem}
+.section{margin:30px 0;padding:20px;background:#0d1525;border:1px solid #1a2744;border-radius:14px}
+.section h3{margin-bottom:10px;font-size:1.2rem}
+iframe{border:1px solid #1a2744;border-radius:12px;display:block;margin:10px auto}
+.info{background:rgba(255,200,87,0.08);border:1px solid rgba(255,200,87,0.3);border-radius:10px;padding:14px 20px;margin-top:12px;font-size:0.9rem;line-height:1.8}
+</style></head><body>
+<h2>ظواهر على انكسار الضوء والانعكاس الكلي الداخلي</h2>
+<div class="section">
+<h3 style="color:#ffc857">🏜️ السراب الصحراوي — Inferior Mirage</h3>
+""" + get_mirage_html() + """
+<div class="info">
+<b>السبب:</b> الهواء الملامس للأرض ساخن → معامل انكساره أقل.<br>
+كلما ارتفعنا تقل الحرارة ويزداد معامل الانكسار.<br>
+تنكسر الأشعة مبتعدة عن العمود، وعندما θ₁ > θc تحدث TIR.<br>
+يرى المراقب صورة مقلوبة فيبدو وكأنها بركة ماء.
+</div>
+</div>
+<div class="section">
+<h3 style="color:#ff4488">🌈 قوس المطر — Rainbow</h3>
+""" + get_rainbow_html() + """
+<div class="info">
+<b>الآلية:</b> ينكسر الضوء عند دخول القطرة → ينعكس كليًّا داخليًّا على السطح الخلفي → ينكسر عند الخروج.<br>
+كل لون له معامل انكسار مختلف في الماء → تتبعثر الألوان.<br>
+يُرى القوس باتجاه معاكس للشمس.
+</div>
+</div>
+<div class="section">
+<h3 style="color:#00b8ff">🔗 الألياف الضوئية — Optical Fibers</h3>
+""" + get_fiber_html() + """
+<div class="info">
+<b>المبدأ:</b> n(قلب) > n(غلاف) → الضوء ينعكس كليًّا داخليًّا بين القلب والغلاف.<br>
+<b>التطبيقات:</b> المناظير الطبية، نقل البيانات والاتصالات بكفاءة عالية.<br>
+ليف بسمك شعرة الإنسان ينقل ~32000 مكالمة صوتية في آن واحد!
+</div>
+</div>
+</body></html>"""
+            get_download_btn(phenomena_html, "phenomena.html", "📥 تنزيل الظواهر الضوئية")
+
+        st.markdown('</div>', unsafe_allow_html=True)
 if __name__ == "__main__":
     main()
